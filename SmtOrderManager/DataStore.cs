@@ -1,4 +1,5 @@
 ﻿using System.Text.Json;
+using Serilog;
 
 namespace SmtOrderManager
 {
@@ -34,6 +35,7 @@ namespace SmtOrderManager
             }
 
             _data = JsonSerializer.Deserialize<StoreData>(json, JsonOptions) ?? new StoreData();
+            Log.Debug("Loaded data from {FilePath}", _filePath);
         }
 
         private void Save()
@@ -58,6 +60,7 @@ namespace SmtOrderManager
             component.Id = GetNextId();
             _data.Components.Add(component);
             Save();
+            Log.Information("Added component: {Package} (ID {Id})", component.Package, component.Id);
         }
 
         public void UpdateComponent(Component updated)
@@ -68,6 +71,7 @@ namespace SmtOrderManager
             existing.Package = updated.Package;
             existing.Description = updated.Description;
             Save();
+            Log.Information("Updated component: {Package} (ID {Id})", updated.Package, updated.Id);
         }
 
         public void DeleteComponent(int id)
@@ -81,6 +85,7 @@ namespace SmtOrderManager
                 board.ComponentIds.Remove(id);
 
             Save();
+            Log.Information("Deleted component: {Package} (ID {Id})", component.Package, id);
         }
 
         public List<Component> SearchComponents(string term)
@@ -102,6 +107,7 @@ namespace SmtOrderManager
             board.Id = GetNextId();
             _data.Boards.Add(board);
             Save();
+            Log.Information("Added board: {Recipe} (ID {Id})", board.Recipe, board.Id);
         }
 
         public void UpdateBoard(Board updated)
@@ -113,6 +119,7 @@ namespace SmtOrderManager
             existing.Barcode = updated.Barcode;
             existing.Width = updated.Width;
             Save();
+            Log.Information("Updated board: {Recipe} (ID {Id})", updated.Recipe, updated.Id);
         }
 
         public void DeleteBoard(int id)
@@ -126,6 +133,7 @@ namespace SmtOrderManager
                 order.BoardIds.Remove(id);
 
             Save();
+            Log.Information("Deleted board: {Recipe} (ID {Id})", board.Recipe, id);
         }
 
         public List<Board> SearchBoards(string term)
@@ -144,6 +152,7 @@ namespace SmtOrderManager
 
             board.ComponentIds.Add(componentId);
             Save();
+            Log.Information("Assigned component {ComponentId} to board {BoardId}", componentId, boardId);
         }
 
         public void RemoveComponentFromBoard(int boardId, int componentId)
@@ -153,6 +162,7 @@ namespace SmtOrderManager
 
             board.ComponentIds.Remove(componentId);
             Save();
+            Log.Information("Removed component {ComponentId} from board {BoardId}", componentId, boardId);
         }
 
         // ---- Orders ----
@@ -166,6 +176,7 @@ namespace SmtOrderManager
             order.Id = GetNextId();
             _data.Orders.Add(order);
             Save();
+            Log.Information("Added order: {Name} (ID {Id})", order.Name, order.Id);
         }
 
         public void UpdateOrder(Order updated)
@@ -177,6 +188,7 @@ namespace SmtOrderManager
             existing.Description = updated.Description;
             existing.OrderDate = updated.OrderDate;
             Save();
+            Log.Information("Updated order: {Name} (ID {Id})", updated.Name, updated.Id);
         }
 
         public void DeleteOrder(int id)
@@ -186,6 +198,7 @@ namespace SmtOrderManager
 
             _data.Orders.RemoveAll(o => o.Id == id);
             Save();
+            Log.Information("Deleted order: {Name} (ID {Id})", order.Name, id);
         }
 
         public List<Order> SearchOrders(string term)
@@ -204,6 +217,7 @@ namespace SmtOrderManager
 
             order.BoardIds.Add(boardId);
             Save();
+            Log.Information("Assigned board {BoardId} to order {OrderId}", boardId, orderId);
         }
 
         public void RemoveBoardFromOrder(int orderId, int boardId)
@@ -213,6 +227,7 @@ namespace SmtOrderManager
 
             order.BoardIds.Remove(boardId);
             Save();
+            Log.Information("Removed board {BoardId} from order {OrderId}", boardId, orderId);
         }
 
         // ---- Download (simulate sending to production line) ----
@@ -220,7 +235,11 @@ namespace SmtOrderManager
         public string? DownloadOrder(int orderId, string outputDirectory)
         {
             var order = GetOrder(orderId);
-            if (order == null) return null;
+            if (order == null)
+            {
+                Log.Warning("Download failed: order {OrderId} not found", orderId);
+                return null;
+            }
 
             Directory.CreateDirectory(outputDirectory);
 
@@ -252,6 +271,7 @@ namespace SmtOrderManager
             string json = JsonSerializer.Serialize(manifest, JsonOptions);
             File.WriteAllText(filePath, json);
 
+            Log.Information("Downloaded order {OrderId} to {FilePath}", orderId, filePath);
             return filePath;
         }
     }

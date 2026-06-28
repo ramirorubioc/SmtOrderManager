@@ -1,6 +1,13 @@
-﻿using SmtOrderManager;
+﻿using Serilog;
+using SmtOrderManager;
 
-Console.WriteLine("SMT Order Manager started");
+Log.Logger = new LoggerConfiguration()
+    .MinimumLevel.Debug()
+    .WriteTo.Console()
+    .WriteTo.File("logs/smt-order-manager.log", rollingInterval: RollingInterval.Day)
+    .CreateLogger();
+
+Log.Information("SMT Order Manager started");
 
 string dataFile = Path.Combine(AppContext.BaseDirectory, "data.json");
 string downloadDir = Path.Combine(AppContext.BaseDirectory, "Downloads");
@@ -8,7 +15,8 @@ var store = new DataStore(dataFile);
 
 RunMainMenu();
 
-Console.WriteLine("SMT Order Manager stopped");
+Log.Information("SMT Order Manager stopped");
+Log.CloseAndFlush();
 
 // ============================================================
 // Main Menu
