@@ -110,7 +110,7 @@ namespace SmtOrderManager
             if (existing == null) return;
 
             existing.Recipe = updated.Recipe;
-            existing.Description = updated.Description;
+            existing.Barcode = updated.Barcode;
             existing.Width = updated.Width;
             Save();
         }
@@ -133,7 +133,7 @@ namespace SmtOrderManager
             string lower = term.ToLower();
             return _data.Boards.FindAll(b =>
                 b.Recipe.ToLower().Contains(lower) ||
-                b.Description.ToLower().Contains(lower));
+                b.Barcode.ToLower().Contains(lower));
         }
 
         public void AssignComponentToBoard(int boardId, int componentId)
@@ -237,7 +237,7 @@ namespace SmtOrderManager
                     {
                         b.Id,
                         b.Recipe,
-                        b.Description,
+                        b.Barcode,
                         b.Width,
                         Components = b.ComponentIds
                             .Select(cid => GetComponent(cid))
