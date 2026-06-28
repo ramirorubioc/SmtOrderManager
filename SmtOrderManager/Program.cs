@@ -1,5 +1,8 @@
 ﻿using Serilog;
 using SmtOrderManager;
+using SQLitePCL;
+
+raw.SetProvider(new SQLite3Provider_e_sqlite3());
 
 Log.Logger = new LoggerConfiguration()
     .MinimumLevel.Debug()
@@ -9,10 +12,9 @@ Log.Logger = new LoggerConfiguration()
 
 Log.Information("SMT Order Manager started");
 
-string dataFile = Path.Combine(AppContext.BaseDirectory, "data.json");
 string downloadDir = Path.Combine(AppContext.BaseDirectory, "Downloads");
-var store = new DataStore(dataFile);
-
+// IDataStore store = new JsonDataStore(Path.Combine(AppContext.BaseDirectory, "data.json"));
+IDataStore store = new SqlDataStore("Data Source=smtordermanager.db");
 RunMainMenu();
 
 Log.Information("SMT Order Manager stopped");
@@ -85,15 +87,16 @@ void ListComponents()
         return;
     }
     foreach (var c in components)
-        Console.WriteLine($"  [{c.Id}] {c.Package} - {c.Description}");
+        Console.WriteLine($"  [{c.Id}] {c.Name} - {c.Description} - {c.Quantity}");
 }
 
 void AddComponent()
 {
     var component = new Component
     {
-        Package = ReadInput("Package: "),
-        Description = ReadInput("Description: ")
+        Name = ReadInput("Name: "),
+        Description = ReadInput("Description: "),
+        Quantity = ReadInt("Quantity: ")
     };
     store.AddComponent(component);
     Console.WriteLine($"Component added with ID {component.Id}.");
@@ -105,12 +108,14 @@ void EditComponent()
     var component = store.GetComponent(id);
     if (component == null) { Console.WriteLine("Not found."); return; }
 
-    Console.WriteLine($"Current: {component.Package} - {component.Description}");
-    string pkg = ReadInput($"Package [{component.Package}]: ");
+    Console.WriteLine($"Current: {component.Name} - {component.Description} - {component.Quantity}");
+    string nme = ReadInput($"Name [{component.Name}]: ");
     string desc = ReadInput($"Description [{component.Description}]: ");
+    int qnt = ReadInt($"Description [{component.Quantity}]: ");
 
-    component.Package = string.IsNullOrEmpty(pkg) ? component.Package : pkg;
+    component.Name = string.IsNullOrEmpty(nme) ? component.Name : nme;
     component.Description = string.IsNullOrEmpty(desc) ? component.Description : desc;
+    component.Quantity = qnt;
     store.UpdateComponent(component);
     Console.WriteLine("Component updated.");
 }
@@ -121,7 +126,7 @@ void SearchComponents()
     var results = store.SearchComponents(term);
     if (results.Count == 0) { Console.WriteLine("No matches."); return; }
     foreach (var c in results)
-        Console.WriteLine($"  [{c.Id}] {c.Package} - {c.Description}");
+        Console.WriteLine($"  [{c.Id}] {c.Name} - {c.Description} - {c.Quantity}");
 }
 
 void DeleteComponent()
@@ -172,14 +177,10 @@ void ListBoards()
     if (boards.Count == 0) { Console.WriteLine("No boards found."); return; }
     foreach (var b in boards)
     {
-        Console.WriteLine($"  [{b.Id}] {b.Recipe} - Barcode: {b.Barcode} (Width: {b.Width} mm)");
-        if (b.ComponentIds.Count > 0)
+        Console.WriteLine($"  [{b.Id}] {b.Name} - Barcode: {b.Description} - (Length: {b.Length} mm) - (Width: {b.Width} mm)");
+        foreach (var c in b.Components)
         {
-            foreach (int cid in b.ComponentIds)
-            {
-                var c = store.GetComponent(cid);
-                if (c != null) Console.WriteLine($"       -> Component: {c.Package}");
-            }
+            if (c != null) Console.WriteLine($"       -> [{c.Id}] Component: {c.Name}");
         }
     }
 }
@@ -188,8 +189,9 @@ void AddBoard()
 {
     var board = new Board
     {
-        Recipe = ReadInput("Recipe: "),
-        Barcode = ReadInput("Barcode: "),
+        Name = ReadInput("Name: "),
+        Description = ReadInput("Description: "),
+        Length = ReadDouble("Length (mm): "),
         Width = ReadDouble("Width (mm): ")
     };
     store.AddBoard(board);
@@ -202,13 +204,15 @@ void EditBoard()
     var board = store.GetBoard(id);
     if (board == null) { Console.WriteLine("Not found."); return; }
 
-    Console.WriteLine($"Current: {board.Recipe} - Barcode: {board.Barcode} (Width: {board.Width} mm)");
-    string recipe = ReadInput($"Recipe [{board.Recipe}]: ");
-    string barcode = ReadInput($"Barcode [{board.Barcode}]: ");
+    Console.WriteLine($"Current: {board.Name} - Description: {board.Description} (Length: {board.Length} mm) (Width: {board.Width} mm)");
+    string name = ReadInput($"Name [{board.Name}]: ");
+    string description = ReadInput($"Barcode [{board.Description}]: ");
+    string length = ReadInput($"Length [{board.Length}]: ");
     string width = ReadInput($"Width [{board.Width}]: ");
 
-    board.Recipe = string.IsNullOrEmpty(recipe) ? board.Recipe : recipe;
-    board.Barcode = string.IsNullOrEmpty(barcode) ? board.Barcode : barcode;
+    board.Name = string.IsNullOrEmpty(name) ? board.Name : name;
+    board.Description = string.IsNullOrEmpty(description) ? board.Description : description;
+    board.Length = string.IsNullOrEmpty(length) ? board.Length : double.Parse(length);
     board.Width = string.IsNullOrEmpty(width) ? board.Width : double.Parse(width);
     store.UpdateBoard(board);
     Console.WriteLine("Board updated.");
@@ -220,7 +224,7 @@ void SearchBoards()
     var results = store.SearchBoards(term);
     if (results.Count == 0) { Console.WriteLine("No matches."); return; }
     foreach (var b in results)
-        Console.WriteLine($"  [{b.Id}] {b.Recipe} - Barcode: {b.Barcode} (Width: {b.Width} mm)");
+        Console.WriteLine($"  [{b.Id}] {b.Name} - Description: {b.Description} (Width: {b.Length} mm) (Width: {b.Width} mm)");
 }
 
 void DeleteBoard()
@@ -291,13 +295,9 @@ void ListOrders()
     foreach (var o in orders)
     {
         Console.WriteLine($"  [{o.Id}] {o.Name} - {o.Description} (Date: {o.OrderDate:yyyy-MM-dd})");
-        if (o.BoardIds.Count > 0)
+        foreach (var b in o.Boards)
         {
-            foreach (int bid in o.BoardIds)
-            {
-                var b = store.GetBoard(bid);
-                if (b != null) Console.WriteLine($"       -> Board: {b.Recipe} (Width: {b.Width} mm)");
-            }
+            if (b != null) Console.WriteLine($"       -> [{b.Id}] Board: {b.Name} (Width: {b.Length} mm) (Width: {b.Width} mm)");
         }
     }
 }
