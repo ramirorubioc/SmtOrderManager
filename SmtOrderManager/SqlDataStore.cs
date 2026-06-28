@@ -9,7 +9,7 @@ using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 
 namespace SmtOrderManager
 {
-    internal class SqlDataStore : IDataStore
+    public class SqlDataStore : IDataStore
     {
         private readonly string _connectionString;
         private AppDbContext Db() => new(_connectionString);

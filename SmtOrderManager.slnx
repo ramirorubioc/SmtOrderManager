@@ -1,3 +1,4 @@
 <Solution>
+  <Project Path="SmtOrderManager.Tests/SmtOrderManager.Tests.csproj" Id="4c879886-2331-4840-9c0a-30b1fd083a0e" />
   <Project Path="SmtOrderManager/SmtOrderManager.csproj" />
 </Solution>
