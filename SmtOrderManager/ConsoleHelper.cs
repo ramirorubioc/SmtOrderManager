@@ -30,5 +30,47 @@
             DateTime.TryParse(input, out DateTime value);
             return value;
         }
+
+        public static string ReadRequiredInput(string prompt)
+        {
+            while (true)
+            {
+                string value = ReadInput(prompt);
+                if (!string.IsNullOrWhiteSpace(value)) return value;
+                Console.WriteLine("  This field is required.");
+            }
+        }
+
+        public static int ReadPositiveInt(string prompt)
+        {
+            while (true)
+            {
+                Console.Write(prompt);
+                if (int.TryParse(Console.ReadLine()?.Trim(), out int value) && value > 0) return value;
+                Console.WriteLine("  Please enter a valid positive integer.");
+            }
+        }
+
+        public static double ReadPositiveDouble(string prompt)
+        {
+            while (true)
+            {
+                Console.Write(prompt);
+                if (double.TryParse(Console.ReadLine()?.Trim(), out double value) && value > 0) return value;
+                Console.WriteLine("  Please enter a valid positive number.");
+            }
+        }
+
+        public static DateTime ReadValidDate(string prompt)
+        {
+            while (true)
+            {
+                Console.Write(prompt);
+                string input = Console.ReadLine()?.Trim() ?? "";
+                if (string.IsNullOrEmpty(input)) return DateTime.Today;
+                if (DateTime.TryParse(input, out DateTime value)) return value;
+                Console.WriteLine("  Please enter a valid date (yyyy-MM-dd).");
+            }
+        }
     }
 }

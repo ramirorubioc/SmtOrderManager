@@ -49,9 +49,7 @@ namespace SmtOrderManager
             {
                 Console.WriteLine($"  [{b.Id}] {b.Name} - {b.Description} - (Length: {b.Length} mm) - (Width: {b.Width} mm)");
                 foreach (var c in b.Components)
-                {
                     if (c != null) Console.WriteLine($"       -> [{c.Id}] {c.Name} - {c.Description} - {c.Quantity}");
-                }
             }
         }
 
@@ -59,10 +57,10 @@ namespace SmtOrderManager
         {
             var board = new Board
             {
-                Name = ReadInput("Name: "),
-                Description = ReadInput("Description: "),
-                Length = ReadDouble("Length (mm): "),
-                Width = ReadDouble("Width (mm): ")
+                Name = ReadRequiredInput("Name: "),
+                Description = ReadRequiredInput("Description: "),
+                Length = ReadPositiveDouble("Length (mm): "),
+                Width = ReadPositiveDouble("Width (mm): ")
             };
             _store.AddBoard(board);
             Console.WriteLine($"Board added with ID {board.Id}.");
@@ -75,15 +73,17 @@ namespace SmtOrderManager
             if (board == null) { Console.WriteLine("Not found."); return; }
 
             Console.WriteLine($"Current: {board.Name} - {board.Description} - (Length: {board.Length} mm) - (Width: {board.Width} mm)");
+            Console.WriteLine("(Press Enter to keep current value)");
             string name = ReadInput($"Name [{board.Name}]: ");
-            string description = ReadInput($"Barcode [{board.Description}]: ");
+            string description = ReadInput($"Description [{board.Description}]: ");
             string length = ReadInput($"Length [{board.Length}]: ");
             string width = ReadInput($"Width [{board.Width}]: ");
 
             board.Name = string.IsNullOrEmpty(name) ? board.Name : name;
             board.Description = string.IsNullOrEmpty(description) ? board.Description : description;
-            board.Length = string.IsNullOrEmpty(length) ? board.Length : double.Parse(length);
-            board.Width = string.IsNullOrEmpty(width) ? board.Width : double.Parse(width);
+            board.Length = (double.TryParse(length, out double l) && l > 0) ? l : board.Length;
+            board.Width = (double.TryParse(width, out double w) && w > 0) ? w : board.Width;
+
             _store.UpdateBoard(board);
             Console.WriteLine("Board updated.");
         }
@@ -127,11 +127,7 @@ namespace SmtOrderManager
         private void ListComponents()
         {
             var components = _store.GetAllComponents();
-            if (components.Count == 0)
-            {
-                Console.WriteLine("No components found.");
-                return;
-            }
+            if (components.Count == 0) { Console.WriteLine("No components found."); return; }
             foreach (var c in components)
                 Console.WriteLine($"  [{c.Id}] {c.Name} - {c.Description} - {c.Quantity}");
         }

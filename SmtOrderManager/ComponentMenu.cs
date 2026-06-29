@@ -40,11 +40,7 @@ namespace SmtOrderManager
         public void ListComponents()
         {
             var components = _store.GetAllComponents();
-            if (components.Count == 0)
-            {
-                Console.WriteLine("No components found.");
-                return;
-            }
+            if (components.Count == 0) { Console.WriteLine("No components found."); return; }
             foreach (var c in components)
                 Console.WriteLine($"  [{c.Id}] {c.Name} - {c.Description} - {c.Quantity}");
         }
@@ -53,9 +49,9 @@ namespace SmtOrderManager
         {
             var component = new Component
             {
-                Name = ReadInput("Name: "),
-                Description = ReadInput("Description: "),
-                Quantity = ReadInt("Quantity: ")
+                Name = ReadRequiredInput("Name: "),
+                Description = ReadRequiredInput("Description: "),
+                Quantity = ReadPositiveInt("Quantity: ")
             };
             _store.AddComponent(component);
             Console.WriteLine($"Component added with ID {component.Id}.");
@@ -68,13 +64,15 @@ namespace SmtOrderManager
             if (component == null) { Console.WriteLine("Not found."); return; }
 
             Console.WriteLine($"Current: {component.Name} - {component.Description} - {component.Quantity}");
-            string nme = ReadInput($"Name [{component.Name}]: ");
+            Console.WriteLine("(Press Enter to keep current value)");
+            string name = ReadInput($"Name [{component.Name}]: ");
             string desc = ReadInput($"Description [{component.Description}]: ");
-            int qnt = ReadInt($"Description [{component.Quantity}]: ");
+            string qtyInput = ReadInput($"Quantity [{component.Quantity}]: ");
 
-            component.Name = string.IsNullOrEmpty(nme) ? component.Name : nme;
+            component.Name = string.IsNullOrEmpty(name) ? component.Name : name;
             component.Description = string.IsNullOrEmpty(desc) ? component.Description : desc;
-            component.Quantity = qnt;
+            component.Quantity = (int.TryParse(qtyInput, out int qty) && qty > 0) ? qty : component.Quantity;
+
             _store.UpdateComponent(component);
             Console.WriteLine("Component updated.");
         }

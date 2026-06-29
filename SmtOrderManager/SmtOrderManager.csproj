@@ -6,11 +6,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
   </PropertyGroup>
-
-  <ItemGroup>
-    <Compile Remove="JsonDataStore.cs" />
-  </ItemGroup>
-
+	
   <ItemGroup>
 	<PackageReference Include="SourceGear.sqlite3" Version="3.50.4.5" />
 	<PackageReference Include="SQLitePCLRaw.provider.e_sqlite3" Version="2.1.10" />

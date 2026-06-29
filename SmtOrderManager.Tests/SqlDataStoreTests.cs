@@ -1,7 +1,5 @@
 ﻿using Microsoft.Data.Sqlite;
-using Newtonsoft.Json.Linq;
 using SQLitePCL;
-using System.ComponentModel;
 
 namespace SmtOrderManager.Tests;
 

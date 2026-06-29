@@ -62,9 +62,7 @@ namespace SmtOrderManager
             {
                 Console.WriteLine($"  [{o.Id}] {o.Name} - {o.Description} (Date: {o.OrderDate:yyyy-MM-dd})");
                 foreach (var b in o.Boards)
-                {
                     if (b != null) Console.WriteLine($"       -> [{b.Id}] {b.Name} - {b.Description} - (Length: {b.Length} mm) - (Width: {b.Width} mm)");
-                }
             }
         }
 
@@ -72,9 +70,9 @@ namespace SmtOrderManager
         {
             var order = new Order
             {
-                Name = ReadInput("Name: "),
-                Description = ReadInput("Description: "),
-                OrderDate = ReadDate("Order date (yyyy-MM-dd) [today]: ")
+                Name = ReadRequiredInput("Name: "),
+                Description = ReadRequiredInput("Description: "),
+                OrderDate = ReadValidDate("Order date (yyyy-MM-dd) [today]: ")
             };
             _store.AddOrder(order);
             Console.WriteLine($"Order added with ID {order.Id}.");
@@ -87,13 +85,15 @@ namespace SmtOrderManager
             if (order == null) { Console.WriteLine("Not found."); return; }
 
             Console.WriteLine($"Current: {order.Name} - {order.Description} (Date: {order.OrderDate:yyyy-MM-dd})");
+            Console.WriteLine("(Press Enter to keep current value)");
             string name = ReadInput($"Name [{order.Name}]: ");
             string desc = ReadInput($"Description [{order.Description}]: ");
             string date = ReadInput($"Date [{order.OrderDate:yyyy-MM-dd}]: ");
 
             order.Name = string.IsNullOrEmpty(name) ? order.Name : name;
             order.Description = string.IsNullOrEmpty(desc) ? order.Description : desc;
-            order.OrderDate = string.IsNullOrEmpty(date) ? order.OrderDate : DateTime.Parse(date);
+            order.OrderDate = (DateTime.TryParse(date, out DateTime parsed)) ? parsed : order.OrderDate;
+
             _store.UpdateOrder(order);
             Console.WriteLine("Order updated.");
         }
@@ -142,9 +142,7 @@ namespace SmtOrderManager
             {
                 Console.WriteLine($"  [{b.Id}] {b.Name} - {b.Description} - (Length: {b.Length} mm) - (Width: {b.Width} mm)");
                 foreach (var c in b.Components)
-                {
                     if (c != null) Console.WriteLine($"       -> [{c.Id}] {c.Name} - {c.Description} - {c.Quantity}");
-                }
             }
         }
     }
