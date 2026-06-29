@@ -1,4 +1,5 @@
-﻿using static SmtOrderManager.ConsoleHelper;
+﻿using Serilog;
+using static SmtOrderManager.ConsoleHelper;
 
 namespace SmtOrderManager
 {
@@ -39,59 +40,99 @@ namespace SmtOrderManager
 
         public void ListComponents()
         {
-            var components = _store.GetAllComponents();
-            if (components.Count == 0) { Console.WriteLine("No components found."); return; }
-            foreach (var c in components)
-                Console.WriteLine($"  [{c.Id}] {c.Name} - {c.Description} - {c.Quantity}");
+            try
+            {
+                var components = _store.GetAllComponents();
+                if (components.Count == 0) { Console.WriteLine("No components found."); return; }
+                foreach (var c in components)
+                    Console.WriteLine($"  [{c.Id}] {c.Name} - {c.Description} - {c.Quantity}");
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, "Failed to list components");
+                Console.WriteLine("An error occurred while listing components. See logs for details.");
+            }
         }
 
         private void AddComponent()
         {
-            var component = new Component
+            try
             {
-                Name = ReadRequiredInput("Name: "),
-                Description = ReadRequiredInput("Description: "),
-                Quantity = ReadPositiveInt("Quantity: ")
-            };
-            _store.AddComponent(component);
-            Console.WriteLine($"Component added with ID {component.Id}.");
+                var component = new Component
+                {
+                    Name = ReadRequiredInput("Name: "),
+                    Description = ReadRequiredInput("Description: "),
+                    Quantity = ReadPositiveInt("Quantity: ")
+                };
+                _store.AddComponent(component);
+                Console.WriteLine($"Component added with ID {component.Id}.");
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, "Failed to add component");
+                Console.WriteLine("An error occurred while adding the component. See logs for details.");
+            }
         }
 
         private void EditComponent()
         {
-            int id = ReadInt("Component ID to edit: ");
-            var component = _store.GetComponent(id);
-            if (component == null) { Console.WriteLine("Not found."); return; }
+            try
+            {
+                int id = ReadInt("Component ID to edit: ");
+                var component = _store.GetComponent(id);
+                if (component == null) { Console.WriteLine("Not found."); return; }
 
-            Console.WriteLine($"Current: {component.Name} - {component.Description} - {component.Quantity}");
-            Console.WriteLine("(Press Enter to keep current value)");
-            string name = ReadInput($"Name [{component.Name}]: ");
-            string desc = ReadInput($"Description [{component.Description}]: ");
-            string qtyInput = ReadInput($"Quantity [{component.Quantity}]: ");
+                Console.WriteLine($"Current: {component.Name} - {component.Description} - {component.Quantity}");
+                Console.WriteLine("(Press Enter to keep current value)");
+                string name = ReadInput($"Name [{component.Name}]: ");
+                string desc = ReadInput($"Description [{component.Description}]: ");
+                string qtyInput = ReadInput($"Quantity [{component.Quantity}]: ");
 
-            component.Name = string.IsNullOrEmpty(name) ? component.Name : name;
-            component.Description = string.IsNullOrEmpty(desc) ? component.Description : desc;
-            component.Quantity = (int.TryParse(qtyInput, out int qty) && qty > 0) ? qty : component.Quantity;
+                component.Name = string.IsNullOrEmpty(name) ? component.Name : name;
+                component.Description = string.IsNullOrEmpty(desc) ? component.Description : desc;
+                component.Quantity = (int.TryParse(qtyInput, out int qty) && qty > 0) ? qty : component.Quantity;
 
-            _store.UpdateComponent(component);
-            Console.WriteLine("Component updated.");
+                _store.UpdateComponent(component);
+                Console.WriteLine("Component updated.");
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, "Failed to edit component");
+                Console.WriteLine("An error occurred while editing the component. See logs for details.");
+            }
         }
 
         private void SearchComponents()
         {
-            string term = ReadInput("Search term: ");
-            var results = _store.SearchComponents(term);
-            if (results.Count == 0) { Console.WriteLine("No matches."); return; }
-            foreach (var c in results)
-                Console.WriteLine($"  [{c.Id}] {c.Name} - {c.Description} - {c.Quantity}");
+            try
+            {
+                string term = ReadInput("Search term: ");
+                var results = _store.SearchComponents(term);
+                if (results.Count == 0) { Console.WriteLine("No matches."); return; }
+                foreach (var c in results)
+                    Console.WriteLine($"  [{c.Id}] {c.Name} - {c.Description} - {c.Quantity}");
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, "Failed to search components");
+                Console.WriteLine("An error occurred while searching components. See logs for details.");
+            }
         }
 
         private void DeleteComponent()
         {
-            int id = ReadInt("Component ID to delete: ");
-            if (_store.GetComponent(id) == null) { Console.WriteLine("Not found."); return; }
-            _store.DeleteComponent(id);
-            Console.WriteLine("Component deleted.");
+            try
+            {
+                int id = ReadInt("Component ID to delete: ");
+                if (_store.GetComponent(id) == null) { Console.WriteLine("Not found."); return; }
+                _store.DeleteComponent(id);
+                Console.WriteLine("Component deleted.");
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, "Failed to delete component");
+                Console.WriteLine("An error occurred while deleting the component. See logs for details.");
+            }
         }
     }
 }

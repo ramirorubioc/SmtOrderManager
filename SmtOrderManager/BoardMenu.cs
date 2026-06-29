@@ -1,4 +1,5 @@
-﻿using static SmtOrderManager.ConsoleHelper;
+﻿using Serilog;
+using static SmtOrderManager.ConsoleHelper;
 
 namespace SmtOrderManager
 {
@@ -43,93 +44,157 @@ namespace SmtOrderManager
 
         public void ListBoards()
         {
-            var boards = _store.GetAllBoards();
-            if (boards.Count == 0) { Console.WriteLine("No boards found."); return; }
-            foreach (var b in boards)
+            try
             {
-                Console.WriteLine($"  [{b.Id}] {b.Name} - {b.Description} - (Length: {b.Length} mm) - (Width: {b.Width} mm)");
-                foreach (var c in b.Components)
-                    if (c != null) Console.WriteLine($"       -> [{c.Id}] {c.Name} - {c.Description} - {c.Quantity}");
+                var boards = _store.GetAllBoards();
+                if (boards.Count == 0) { Console.WriteLine("No boards found."); return; }
+                foreach (var b in boards)
+                {
+                    Console.WriteLine($"  [{b.Id}] {b.Name} - {b.Description} - (Length: {b.Length} mm) - (Width: {b.Width} mm)");
+                    foreach (var c in b.Components)
+                        if (c != null) Console.WriteLine($"       -> [{c.Id}] {c.Name} - {c.Description} - {c.Quantity}");
+                }
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, "Failed to list boards");
+                Console.WriteLine("An error occurred while listing boards. See logs for details.");
             }
         }
 
         private void AddBoard()
         {
-            var board = new Board
+            try
             {
-                Name = ReadRequiredInput("Name: "),
-                Description = ReadRequiredInput("Description: "),
-                Length = ReadPositiveDouble("Length (mm): "),
-                Width = ReadPositiveDouble("Width (mm): ")
-            };
-            _store.AddBoard(board);
-            Console.WriteLine($"Board added with ID {board.Id}.");
+                var board = new Board
+                {
+                    Name = ReadRequiredInput("Name: "),
+                    Description = ReadRequiredInput("Description: "),
+                    Length = ReadPositiveDouble("Length (mm): "),
+                    Width = ReadPositiveDouble("Width (mm): ")
+                };
+                _store.AddBoard(board);
+                Console.WriteLine($"Board added with ID {board.Id}.");
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, "Failed to add board");
+                Console.WriteLine("An error occurred while adding the board. See logs for details.");
+            }
         }
 
         private void EditBoard()
         {
-            int id = ReadInt("Board ID to edit: ");
-            var board = _store.GetBoard(id);
-            if (board == null) { Console.WriteLine("Not found."); return; }
+            try
+            {
+                int id = ReadInt("Board ID to edit: ");
+                var board = _store.GetBoard(id);
+                if (board == null) { Console.WriteLine("Not found."); return; }
 
-            Console.WriteLine($"Current: {board.Name} - {board.Description} - (Length: {board.Length} mm) - (Width: {board.Width} mm)");
-            Console.WriteLine("(Press Enter to keep current value)");
-            string name = ReadInput($"Name [{board.Name}]: ");
-            string description = ReadInput($"Description [{board.Description}]: ");
-            string length = ReadInput($"Length [{board.Length}]: ");
-            string width = ReadInput($"Width [{board.Width}]: ");
+                Console.WriteLine($"Current: {board.Name} - {board.Description} - (Length: {board.Length} mm) - (Width: {board.Width} mm)");
+                Console.WriteLine("(Press Enter to keep current value)");
+                string name = ReadInput($"Name [{board.Name}]: ");
+                string description = ReadInput($"Description [{board.Description}]: ");
+                string length = ReadInput($"Length [{board.Length}]: ");
+                string width = ReadInput($"Width [{board.Width}]: ");
 
-            board.Name = string.IsNullOrEmpty(name) ? board.Name : name;
-            board.Description = string.IsNullOrEmpty(description) ? board.Description : description;
-            board.Length = (double.TryParse(length, out double l) && l > 0) ? l : board.Length;
-            board.Width = (double.TryParse(width, out double w) && w > 0) ? w : board.Width;
+                board.Name = string.IsNullOrEmpty(name) ? board.Name : name;
+                board.Description = string.IsNullOrEmpty(description) ? board.Description : description;
+                board.Length = (double.TryParse(length, out double l) && l > 0) ? l : board.Length;
+                board.Width = (double.TryParse(width, out double w) && w > 0) ? w : board.Width;
 
-            _store.UpdateBoard(board);
-            Console.WriteLine("Board updated.");
+                _store.UpdateBoard(board);
+                Console.WriteLine("Board updated.");
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, "Failed to edit board");
+                Console.WriteLine("An error occurred while editing the board. See logs for details.");
+            }
         }
 
         private void SearchBoards()
         {
-            string term = ReadInput("Search term: ");
-            var results = _store.SearchBoards(term);
-            if (results.Count == 0) { Console.WriteLine("No matches."); return; }
-            foreach (var b in results)
-                Console.WriteLine($"  [{b.Id}] {b.Name} - {b.Description} - (Length: {b.Length} mm) - (Width: {b.Width} mm)");
+            try
+            {
+                string term = ReadInput("Search term: ");
+                var results = _store.SearchBoards(term);
+                if (results.Count == 0) { Console.WriteLine("No matches."); return; }
+                foreach (var b in results)
+                    Console.WriteLine($"  [{b.Id}] {b.Name} - {b.Description} - (Length: {b.Length} mm) - (Width: {b.Width} mm)");
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, "Failed to search boards");
+                Console.WriteLine("An error occurred while searching boards. See logs for details.");
+            }
         }
 
         private void DeleteBoard()
         {
-            int id = ReadInt("Board ID to delete: ");
-            if (_store.GetBoard(id) == null) { Console.WriteLine("Not found."); return; }
-            _store.DeleteBoard(id);
-            Console.WriteLine("Board deleted.");
+            try
+            {
+                int id = ReadInt("Board ID to delete: ");
+                if (_store.GetBoard(id) == null) { Console.WriteLine("Not found."); return; }
+                _store.DeleteBoard(id);
+                Console.WriteLine("Board deleted.");
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, "Failed to delete board");
+                Console.WriteLine("An error occurred while deleting the board. See logs for details.");
+            }
         }
 
         private void AssignComponentToBoard()
         {
-            ListBoards();
-            int boardId = ReadInt("Board ID: ");
-            ListComponents();
-            int componentId = ReadInt("Component ID: ");
-            _store.AssignComponentToBoard(boardId, componentId);
-            Console.WriteLine("Component assigned to board.");
+            try
+            {
+                ListBoards();
+                int boardId = ReadInt("Board ID: ");
+                ListComponents();
+                int componentId = ReadInt("Component ID: ");
+                _store.AssignComponentToBoard(boardId, componentId);
+                Console.WriteLine("Component assigned to board.");
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, "Failed to assign component to board");
+                Console.WriteLine("An error occurred while assigning the component. See logs for details.");
+            }
         }
 
         private void RemoveComponentFromBoard()
         {
-            ListBoards();
-            int boardId = ReadInt("Board ID: ");
-            int componentId = ReadInt("Component ID to remove: ");
-            _store.RemoveComponentFromBoard(boardId, componentId);
-            Console.WriteLine("Component removed from board.");
+            try
+            {
+                ListBoards();
+                int boardId = ReadInt("Board ID: ");
+                int componentId = ReadInt("Component ID to remove: ");
+                _store.RemoveComponentFromBoard(boardId, componentId);
+                Console.WriteLine("Component removed from board.");
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, "Failed to remove component from board");
+                Console.WriteLine("An error occurred while removing the component. See logs for details.");
+            }
         }
 
         private void ListComponents()
         {
-            var components = _store.GetAllComponents();
-            if (components.Count == 0) { Console.WriteLine("No components found."); return; }
-            foreach (var c in components)
-                Console.WriteLine($"  [{c.Id}] {c.Name} - {c.Description} - {c.Quantity}");
+            try
+            {
+                var components = _store.GetAllComponents();
+                if (components.Count == 0) { Console.WriteLine("No components found."); return; }
+                foreach (var c in components)
+                    Console.WriteLine($"  [{c.Id}] {c.Name} - {c.Description} - {c.Quantity}");
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, "Failed to list components");
+                Console.WriteLine("An error occurred while listing components. See logs for details.");
+            }
         }
     }
 }
