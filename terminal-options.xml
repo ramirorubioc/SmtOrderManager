@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  SMT Order Manager — Terminal Menu Reference
+  Describes every option available in the console (terminal) interface.
+-->
+<terminalOptions application="SmtOrderManager">
+
+  <menu name="MainMenu" description="Shown on application start.">
+    <option key="1" label="Components">Opens the Component menu.</option>
+    <option key="2" label="Boards">Opens the Board menu.</option>
+    <option key="3" label="Orders">Opens the Order menu.</option>
+    <option key="4" label="Download Order">Prompts for an Order ID and writes its JSON manifest to the Downloads folder.</option>
+    <option key="0" label="Exit">Stops the application and flushes logs.</option>
+  </menu>
+
+  <menu name="ComponentMenu" description="Manage Components. Reached via Main Menu option 1.">
+    <option key="1" label="List all">Lists every Component with ID, name, description, and quantity.</option>
+    <option key="2" label="Add">Prompts for name, description, and quantity, then creates a new Component.</option>
+    <option key="3" label="Edit">Prompts for a Component ID, then for new values (press Enter to keep current value).</option>
+    <option key="4" label="Search">Prompts for a search term and matches against name or description.</option>
+    <option key="5" label="Delete">Prompts for a Component ID and removes it if found.</option>
+    <option key="0" label="Back">Returns to the Main Menu.</option>
+  </menu>
+
+  <menu name="BoardMenu" description="Manage Boards and their assigned Components. Reached via Main Menu option 2.">
+    <option key="1" label="List all">Lists every Board with its attributes, including assigned Components.</option>
+    <option key="2" label="Add">Prompts for name, description, length (mm), and width (mm), then creates a new Board.</option>
+    <option key="3" label="Edit">Prompts for a Board ID, then for new values (press Enter to keep current value).</option>
+    <option key="4" label="Search">Prompts for a search term and matches against name or description.</option>
+    <option key="5" label="Delete">Prompts for a Board ID and removes it if found.</option>
+    <option key="6" label="Assign component to board">Lists Boards and Components, then links a chosen Component to a chosen Board.</option>
+    <option key="7" label="Remove component from board">Prompts for a Board ID and a Component ID, then unlinks them.</option>
+    <option key="0" label="Back">Returns to the Main Menu.</option>
+  </menu>
+
+  <menu name="OrderMenu" description="Manage Orders and their assigned Boards. Reached via Main Menu option 3.">
+    <option key="1" label="List all">Lists every Order with its attributes, including assigned Boards and their Components.</option>
+    <option key="2" label="Add">Prompts for name, description, and order date (defaults to today), then creates a new Order.</option>
+    <option key="3" label="Edit">Prompts for an Order ID, then for new values (press Enter to keep current value).</option>
+    <option key="4" label="Search">Prompts for a search term and matches against name or description.</option>
+    <option key="5" label="Delete">Prompts for an Order ID and removes it if found.</option>
+    <option key="6" label="Assign board to order">Lists Orders and Boards, then links a chosen Board to a chosen Order.</option>
+    <option key="7" label="Remove board from order">Prompts for an Order ID and a Board ID, then unlinks them.</option>
+    <option key="0" label="Back">Returns to the Main Menu.</option>
+  </menu>
+
+  <notes>
+    <note>Any prompt asking for an ID accepts only the integer shown in brackets next to each listed item, e.g. "[3] 0805 Resistor".</note>
+    <note>Edit prompts that show a current value in brackets (e.g. "Name [0805 Resistor]:") can be left blank to keep that value unchanged.</note>
+    <note>Downloaded Order JSON files are written to a "Downloads" folder created next to the application executable.</note>
+  </notes>
+
+</terminalOptions>
